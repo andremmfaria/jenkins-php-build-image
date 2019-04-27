@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:latest
 MAINTAINER Andre Faria <andremarcalfaria@gmail.com>
 
 #ENV Sonar-Scanner
