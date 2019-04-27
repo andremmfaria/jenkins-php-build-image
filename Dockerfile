@@ -14,6 +14,13 @@ ENV PATH $PATH:/opt/sonar-scanner/bin
 # Update system
 RUN apk update && \
     apk add --no-cache sudo bash unzip git openjdk8 openssh curl nodejs ansible
+RUN sed -i /etc/ssh/sshd_config \
+        -e 's/#PermitRootLogin.*/PermitRootLogin no/' \
+        -e 's/#RSAAuthentication.*/RSAAuthentication yes/'  \
+        -e 's/#PasswordAuthentication.*/PasswordAuthentication yes/' \
+        -e 's/#SyslogFacility.*/SyslogFacility AUTH/' \
+        -e 's/#LogLevel.*/LogLevel INFO/' && \
+    mkdir /var/run/sshd 
 #Install Sonar-Scanner
 RUN mkdir /tmp/tempdownload && \
     curl --insecure -o /tmp/tempdownload/scanner.zip -L https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-3.3.0.1492-linux.zip && \
