@@ -1,34 +1,29 @@
-FROM ubuntu:latest
+FROM alpine:latest
 MAINTAINER Andre Faria <andremarcalfaria@gmail.com>
+
+ARG user=jenkins
+ARG group=jenkins
+ARG uid=1000
+ARG gid=1000
+ARG JENKINS_AGENT_HOME=/home/${user}
 
 #ENV Sonar-Scanner
 ENV SONAR_RUNNER_HOME=/opt/sonar-scanner
 ENV PATH $PATH:/opt/sonar-scanner/bin
 
 # Update system
-RUN apt-get update && \
-    apt-get -y dist-upgrade && \
-    apt-get install -y wget gnupg unzip git openssh-server curl software-properties-common
-# Install requirements
-RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - && \
-    apt-add-repository ppa:ansible/ansible -y && \
-    apt-get install -y ansible nodejs openjdk-8-jdk sshpass jq
+RUN apk update && \
+    apk add --no-cache sudo bash unzip git openjdk8 openssh curl nodejs ansible
 #Install Sonar-Scanner
 RUN mkdir /tmp/tempdownload && \
     curl --insecure -o /tmp/tempdownload/scanner.zip -L https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-3.3.0.1492-linux.zip && \
     unzip /tmp/tempdownload/scanner.zip -d /tmp/tempdownload && \
     mv /tmp/tempdownload/$(ls /tmp/tempdownload | grep sonar-scanner) /opt/sonar-scanner && \
     rm -rf /tmp/tempdownload
-# Cleanup image
-RUN apt-get autoclean -y && \
-    apt-get autoremove -y
-# Configure sshd
-RUN sed -i 's|session    required     pam_loginuid.so|session    optional     pam_loginuid.so|g' /etc/pam.d/sshd && \
-# Create sshd folder
-    mkdir -p /var/run/sshd
 
-# Add user jenkins to the image, change it's password and create m2 folder
-RUN adduser --disabled-password --gecos "" jenkins && \
+# Add user jenkins to the image, change it's password
+RUN addgroup -g ${gid} ${group} && \
+    adduser -D -h "${JENKINS_AGENT_HOME}" -u "${uid}" -G "${group}" -s /bin/bash "${user}" && \
     echo "jenkins:jenkins" | chpasswd
 
 # Standard SSH port
